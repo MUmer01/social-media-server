@@ -47,6 +47,7 @@ router.get("/all", (req, res) => {
     db.query("SELECT * FROM Users", (err, results) => {
         if (err) {
             console.log(err);
+            res.json(err);
         }
         if (results.length > 0) {
             res.json({ count: results.length, users: results });
