@@ -10,6 +10,10 @@ app.use("/user", userRoute);
 const uploadRoute = require("./routes/Upload");
 app.use("/upload", uploadRoute);
 
+app.get("/", (req, res) => {
+    res.send("Nothing is here!")
+});
+
 app.listen(process.env.PORT || 3001, (req, res) => {
     console.log("Server running...");
 });
