@@ -18,10 +18,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `socialmedia`
+-- Database: `heroku_4704b34efb832e1`
 --
-CREATE DATABASE IF NOT EXISTS `socialmedia` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `socialmedia`;
+CREATE DATABASE IF NOT EXISTS `heroku_4704b34efb832e1` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `heroku_4704b34efb832e1`;
 
 -- --------------------------------------------------------
 
