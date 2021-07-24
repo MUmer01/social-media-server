@@ -49,9 +49,9 @@ router.get("/all", (req, res) => {
             console.log(err);
         }
         if (results.length > 0) {
-            res.json({ users: results });
+            res.json({ count: results.length, users: results });
         } else {
-            res.json({ loggedIn: false, message: "User doesn't exist" });
+            res.json({ message: "No Users" });
         }
     });
 });
