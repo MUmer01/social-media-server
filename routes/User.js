@@ -4,44 +4,56 @@ const router = express.Router();
 const db = require("../config/db");
 
 router.post("/register", (req, res) => {
-  const email = req.body.email;
-  const username = req.body.username;
-  const password = req.body.password;
-  db.query(
-    "INSERT INTO Users (email, username, password) VALUES (?, ?, ?);",
-    [email || username, username, password],
-    (err, results) => {
-      console.log(err);
-      res.send(results);
-    }
-  );
+    const email = req.body.email;
+    const username = req.body.username;
+    const password = req.body.password;
+    db.query(
+        "INSERT INTO Users (email, username, password) VALUES (?, ?, ?);", [email || username, username, password],
+        (err, results) => {
+            console.log(err);
+            res.send(results);
+        }
+    );
 });
 
 router.post("/login", (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+    const username = req.body.username;
+    const password = req.body.password;
 
-  db.query(
-    "SELECT * FROM Users WHERE username = ?",
-    username,
-    (err, results) => {
-      if (err) {
-        console.log(err);
-      }
-      if (results.length > 0) {
-        if (password == results[0].password) {
-          res.json({ loggedIn: true, username: username });
-        } else {
-          res.json({
-            loggedIn: false,
-            message: "Wrong username/password combo!",
-          });
+    db.query(
+        "SELECT * FROM Users WHERE username = ?",
+        username,
+        (err, results) => {
+            if (err) {
+                console.log(err);
+            }
+            if (results.length > 0) {
+                if (password == results[0].password) {
+                    res.json({ loggedIn: true, username: username });
+                } else {
+                    res.json({
+                        loggedIn: false,
+                        message: "Wrong username/password combo!",
+                    });
+                }
+            } else {
+                res.json({ loggedIn: false, message: "User doesn't exist" });
+            }
         }
-      } else {
-        res.json({ loggedIn: false, message: "User doesn't exist" });
-      }
-    }
-  );
+    );
+});
+
+router.get("/all", (req, res) => {
+    db.query("SELECT * FROM Users", (err, results) => {
+        if (err) {
+            console.log(err);
+        }
+        if (results.length > 0) {
+            res.json({ users: results });
+        } else {
+            res.json({ loggedIn: false, message: "User doesn't exist" });
+        }
+    });
 });
 
 module.exports = router;
