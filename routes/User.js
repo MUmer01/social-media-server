@@ -1,4 +1,5 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const router = express.Router();
 
 const db = require("../config/db");
@@ -10,8 +11,20 @@ router.post("/register", (req, res) => {
     db.query(
         "INSERT INTO Users (email, username, password) VALUES (?, ?, ?);", [email || username, username, password],
         (err, results) => {
-            console.log(err);
-            res.send(results);
+            if (err) {
+                if (err.sqlMessage && err.sqlMessage.includes("Duplicate entry")) {
+                    res.status(409);
+                    res.send({ message: "Username or email already exist!" });
+                } else {
+                    res.status(400);
+                    res.send({ message: "Failed to create user!" });
+                }
+            } else {
+                res.send({
+                    message: "User created successfully",
+                    userId: results.insertId,
+                });
+            }
         }
     );
 });
@@ -19,32 +32,39 @@ router.post("/register", (req, res) => {
 router.post("/login", (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
-
     db.query(
-        "SELECT * FROM Users WHERE username = ?",
-        username,
+        "SELECT * FROM Users WHERE username = ? and password = ?", [username, password],
         (err, results) => {
             if (err) {
-                console.log(err);
-            }
-            if (results.length > 0) {
-                if (password == results[0].password) {
-                    res.json({ loggedIn: true, username: username });
-                } else {
-                    res.json({
-                        loggedIn: false,
-                        message: "Wrong username/password combo!",
-                    });
-                }
+                res.status(400);
+                res.send({ message: "Login failed!" });
+            } else if (results.length > 0) {
+                jwt.sign({ user: results[0] }, `secretkey`, (e, token) => {
+                    if (e) {
+                        res.status(400);
+                        res.send({ message: "Login failed!" });
+                    } else {
+                        res.json({
+                            token,
+                            loggedIn: true,
+                            user: {
+                                id: results[0].id,
+                                username,
+                                email: results[0].email,
+                            },
+                        });
+                    }
+                });
             } else {
-                res.json({ loggedIn: false, message: "User doesn't exist" });
+                res.status(401);
+                res.json({ loggedIn: false, message: "Invalid username or password!" });
             }
         }
     );
 });
 
 router.get("/all", (req, res) => {
-    db.query("SELECT * FROM Users", (err, results) => {
+    db.query("SELECT username FROM Users", (err, results) => {
         if (err) {
             console.log(err);
             res.json(err);
