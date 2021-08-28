@@ -39,7 +39,7 @@ router.post("/login", (req, res) => {
                 res.status(400);
                 res.send({ message: "Login failed!" });
             } else if (results.length > 0) {
-                jwt.sign({ user: results[0] }, `secretkey`, (e, token) => {
+                jwt.sign({ user: results[0] }, `secretkey`, { expiresIn: '24h' }, (e, token) => {
                     if (e) {
                         res.status(400);
                         res.send({ message: "Login failed!" });
