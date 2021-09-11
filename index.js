@@ -1,13 +1,21 @@
 const express = require("express");
-const cors = require("cors");
+// const cors = require("cors");
 const app = express();
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH", "OPTIONS"],
-  })
-);
 app.use(express.json());
+// app.use(
+//   cors({
+//     origin: "*",
+//     methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH", "OPTIONS"],
+//   })
+// );
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 const userRoute = require("./routes/User");
 app.use("/user", userRoute);
