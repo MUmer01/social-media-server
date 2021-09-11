@@ -62,7 +62,7 @@ CREATE TABLE `uploads` (
   `id` int(11) NOT NULL,
   `title` varchar(45) NOT NULL,
   `description` varchar(45) NOT NULL,
-  `image` varchar(45) NOT NULL,
+  `image` text NOT NULL,
   `author` varchar(45) NOT NULL COMMENT 'username of a user'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

@@ -1,6 +1,10 @@
 const express = require("express");
+const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
+
+const upload = require("../multer");
+const cloudinary = require("../cloudinary");
 
 const db = require("../config/db");
 
@@ -18,21 +22,28 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-router.post("/", verifyToken, (req, res) => {
-    jwt.verify(req.token, `secretkey`, (e, authData) => {
+router.post("/", [verifyToken, upload.single("image")], (req, res) => {
+    jwt.verify(req.token, `secretkey`, async(e, authData) => {
         if (e) {
             res.status(403);
             res.send({ message: "Authorization token is invalid!" });
         } else {
+            const uploader = async(path) => {
+                return await cloudinary.uploads(path, "social-media-uit");
+            };
+            const file = req.file;
+            const path = file.path;
+            const { url } = await uploader(path);
+            fs.unlinkSync(path);
             const title = req.body.title;
             const description = req.body.description;
-            const image = req.body.image;
+            const image = url;
             const author = authData.user.username;
             db.query(
                 "INSERT INTO Uploads (title, description, image, author) VALUES (?, ?, ?, ?);", [title, description, image, author],
                 (err, results) => {
                     if (err) {
-                        console.log({ err })
+                        console.log({ err });
                         res.status(400);
                         res.send({ message: "Failed to create post!" });
                     } else {
@@ -65,7 +76,7 @@ router.get("/", verifyToken, (req, res) => {
         } else {
             db.query("SELECT * FROM Uploads", (err, results) => {
                 if (err) {
-                    console.log({ err })
+                    console.log({ err });
                     res.status(400);
                     res.send({ message: "Failed to get posts!" });
                 } else {
@@ -88,7 +99,7 @@ router.get("/byUser/:username", verifyToken, (req, res) => {
                 userName,
                 (err, results) => {
                     if (err) {
-                        console.log({ err })
+                        console.log({ err });
                         res.status(400);
                         res.send({ message: "Failed to get posts!" });
                     } else {
@@ -100,25 +111,32 @@ router.get("/byUser/:username", verifyToken, (req, res) => {
     });
 });
 
-router.post("/like", (req, res) => {
-    const userLiking = req.body.userLiking;
-    const postId = req.body.postId;
+router.post("/like", verifyToken, (req, res) => {
+    jwt.verify(req.token, `secretkey`, (e, authData) => {
+        if (e) {
+            res.status(403);
+            res.send({ message: "Authorization token is invalid!" });
+        } else {
+            const userLiking = authData.user.username;
+            const postId = req.body.postId;
 
-    db.query(
-        "INSERT INTO Likes (userLiking, postId) VALUES (?,?)", [userLiking, postId],
-        (err, results) => {
-            if (err) {
-                console.log(err);
-            }
             db.query(
-                "UPDATE Uploads SET likes = likes + 1 WHERE id = ?",
-                postId,
-                (err2, results2) => {
-                    res.send(results);
+                "INSERT INTO Likes (userLiking, postId) VALUES (?,?)", [userLiking, postId],
+                (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    db.query(
+                        "UPDATE Uploads SET likes = likes + 1 WHERE id = ?",
+                        postId,
+                        (err2, results2) => {
+                            res.send(results);
+                        }
+                    );
                 }
             );
         }
-    );
+    });
 });
 
 module.exports = router;
