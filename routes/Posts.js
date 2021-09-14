@@ -58,8 +58,8 @@ router.post("/", [verifyToken, upload.single("image")], (req, res) => {
                     , COUNT(likes.id) AS totalLikes
                     , (SELECT CASE WHEN 
                         COUNT(*) > 0 
-                        THEN 'true' 
-                        ELSE 'false' 
+                        THEN true
+                        ELSE false 
                         END AS BOOL
                         FROM likes
                         WHERE userLiking = ? AND postId = uploads.id) AS isLiked
@@ -105,8 +105,8 @@ router.get("/", verifyToken, (req, res) => {
             , COUNT(likes.id) AS totalLikes
             , (SELECT CASE WHEN 
                 COUNT(*) > 0 
-                THEN 'true' 
-                ELSE 'false' 
+                THEN true
+                ELSE false 
                 END AS BOOL
                 FROM likes
                 WHERE userLiking = ? AND postId = uploads.id) AS isLiked
@@ -148,8 +148,8 @@ router.get("/byUser/:username", verifyToken, (req, res) => {
             , COUNT(likes.id) AS totalLikes
             , (SELECT CASE WHEN 
                 COUNT(*) > 0 
-                THEN 'true' 
-                ELSE 'false' 
+                THEN true
+                ELSE false 
                 END AS BOOL
                 FROM likes
                 WHERE userLiking = ? AND postId = uploads.id) AS isLiked
@@ -185,19 +185,69 @@ router.post("/like", verifyToken, (req, res) => {
       const postId = req.body.postId;
 
       db.query(
-        "INSERT INTO Likes (userLiking, postId) VALUES (?,?)",
-        [userLiking, postId],
-        (err, results) => {
-          if (err) {
-            console.log(err);
+        `SELECT
+            uploads.id
+            , uploads.title
+            , uploads.image
+            , uploads.description
+            , uploads.author
+            , COUNT(likes.id) AS totalLikes
+            , (SELECT CASE WHEN 
+                COUNT(*) > 0 
+                THEN true
+                ELSE false 
+                END AS BOOL
+                FROM likes
+                WHERE userLiking = ? AND postId = uploads.id) AS isLiked
+        FROM
+            likes
+            RIGHT JOIN uploads 
+                ON (likes.postId = uploads.id)
+        WHERE uploads.author = ? AND uploads.id = ?
+        GROUP BY uploads.id
+        ORDER BY uploads.id DESC;`,
+        [userLiking, userLiking, postId],
+        (postErr, posts) => {
+          if (postErr || !posts) {
+            console.log(postErr);
+            res.status(400);
+            res.send({ message: "Something went wrong!" });
           }
-          db.query(
-            "UPDATE Uploads SET likes = likes + 1 WHERE id = ?",
-            postId,
-            (err2, results2) => {
-              res.send(results);
-            }
-          );
+          if (posts.length && posts[0].isLiked) {
+            db.query(
+              "DELETE FROM likes WHERE userLiking = ? AND postId = ?",
+              [userLiking, postId],
+              (err, results2) => {
+                if (err) {
+                  console.log(err);
+                  res.status(400);
+                  res.send({ message: "Failed to unlike post!" });
+                }
+                res.send({
+                  message: "Post unliked successfully",
+                  isLiked: false,
+                  totalLikes: posts[0].totalLikes - 1,
+                });
+              }
+            );
+          } else {
+            db.query(
+              "INSERT INTO Likes (userLiking, postId) VALUES (?,?)",
+              [userLiking, postId],
+              (err, results2) => {
+                if (err) {
+                  console.log(err);
+                  res.status(400);
+                  res.send({ message: "Failed to like post!" });
+                }
+                res.send({
+                  message: "Post liked successfully",
+                  isLiked: true,
+                  totalLikes: posts[0].totalLikes + 1,
+                });
+              }
+            );
+          }
         }
       );
     }
