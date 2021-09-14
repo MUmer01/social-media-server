@@ -203,10 +203,10 @@ router.post("/like", verifyToken, (req, res) => {
             likes
             RIGHT JOIN uploads 
                 ON (likes.postId = uploads.id)
-        WHERE uploads.author = ? AND uploads.id = ?
+        WHERE uploads.id = ?
         GROUP BY uploads.id
         ORDER BY uploads.id DESC;`,
-        [userLiking, userLiking, postId],
+        [userLiking, postId],
         (postErr, posts) => {
           if (postErr || !posts) {
             console.log(postErr);
