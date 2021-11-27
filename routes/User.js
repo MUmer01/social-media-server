@@ -1,33 +1,37 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
+const UserController = require("../Controllers/user")
+
 
 const db = require("../config/db");
 
-router.post("/register", (req, res) => {
-    const email = req.body.email;
-    const username = req.body.username;
-    const password = req.body.password;
-    db.query(
-        "INSERT INTO Users (email, username, password) VALUES (?, ?, ?);", [email || username, username, password],
-        (err, results) => {
-            if (err) {
-                if (err.sqlMessage && err.sqlMessage.includes("Duplicate entry")) {
-                    res.status(409);
-                    res.send({ message: "Username or email already exist!" });
-                } else {
-                    res.status(400);
-                    res.send({ message: "Failed to create user!" });
-                }
-            } else {
-                res.send({
-                    message: "User created successfully",
-                    userId: results.insertId,
-                });
-            }
-        }
-    );
-});
+router.post("/regsiter",UserController.createUser)
+
+// router.post("/register", (req, res) => {
+//     const email = req.body.email;
+//     const username = req.body.username;
+//     const password = req.body.password;
+//     db.query(
+//         "INSERT INTO Users (email, username, password) VALUES (?, ?, ?);", [email || username, username, password],
+//         (err, results) => {
+//             if (err) {
+//                 if (err.sqlMessage && err.sqlMessage.includes("Duplicate entry")) {
+//                     res.status(409);
+//                     res.send({ message: "Username or email already exist!" });
+//                 } else {
+//                     res.status(400);
+//                     res.send({ message: "Failed to create user!" });
+//                 }
+//             } else {
+//                 res.send({
+//                     message: "User created successfully",
+//                     userId: results.insertId,
+//                 });
+//             }
+//         }
+//     );
+// });
 
 router.post("/login", (req, res) => {
     const username = req.body.username;
@@ -63,18 +67,26 @@ router.post("/login", (req, res) => {
     );
 });
 
-router.get("/all", (req, res) => {
-    db.query("SELECT username FROM Users", (err, results) => {
-        if (err) {
-            console.log(err);
-            res.json(err);
-        }
-        if (results.length > 0) {
-            res.json({ count: results.length, users: results });
-        } else {
-            res.json({ message: "No Users" });
-        }
-    });
-});
+// router.get("/all", (req, res) => {
+//     db.query("SELECT username FROM Users", (err, results) => {
+//         if (err) {
+//             console.log(err);
+//             res.json(err);
+//         }
+//         if (results.length > 0) {
+//             res.json({ count: results.length, users: results });
+//         } else {
+//             res.json({ message: "No Users" });
+//         }
+//     });
+// });
+
+router.get("/all", UserController.getUsers)
+
+router.get("/getUser/:id", UserController.getUser )
+
+router.put("/update", UserController.updateUser)
+
+router.delete("/delete/:id", UserController.deleteUser)
 
 module.exports = router;
