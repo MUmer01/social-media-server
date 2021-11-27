@@ -4,7 +4,7 @@ const User = require("../Models/user")
 
 
 const getUsers = (req, res) => {
-    User.find().then(
+    User.find().populate("posts").then(
         (response) => {
 
             res.status(200).send({

@@ -1,6 +1,8 @@
 const express = require("express");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
+
+const PostController = require("../Controllers/post")
 const router = express.Router();
 
 const upload = require("../multer");
@@ -253,5 +255,16 @@ router.post("/like", verifyToken, (req, res) => {
     }
   });
 });
+
+
+
+
+
+router.get("/getPost/:id", PostController.getPost )
+router.get("/getPosts", PostController.getPosts )
+router.post("/create", PostController.createPost )
+router.put("/update", PostController.updatePost)
+router.delete("/delete", PostController.deletePost)
+
 
 module.exports = router;
